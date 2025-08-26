@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="opticrane-icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <title>Opticrane On‑Site Camera Discovery</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+<header>
+  <h1>Opticrane On‑Site Camera Discovery</h1>
+  <p class="subtitle">Fast, offline‑ready, iPhone‑friendly. Save drafts, add photos, and sync when online.</p>
+</header>
+<main>
+  <section class="card">
+    <h2>WHO</h2>
+    <label>Contact name
+      <input id="contactName" type="text" autocomplete="name" required placeholder="First Last">
+    </label>
+    <label>Role
+      <select id="role" required>
+        <option value="">Select…</option>
+        <option>Owner / GM</option>
+        <option>Operations Manager</option>
+        <option>Site Supervisor</option>
+        <option>HSE / CSO</option>
+        <option>Fleet / Service</option>
+        <option>Operator</option>
+        <option>Other</option>
+      </select>
+    </label>
+  </section>
+  <section class="card">
+    <h2>WHERE</h2>
+    <label>Site / Project — City
+      <input id="siteCity" type="text" required placeholder="Project Alpha — Vancouver">
+    </label>
+    <label>Environment
+      <select id="environment" required>
+        <option value="">Select…</option>
+        <option>High‑rise construction</option>
+        <option>Industrial</option>
+        <option>Civil / Infrastructure</option>
+        <option>Ports / Marine</option>
+        <option>Warehouse &amp; MHE</option>
+        <option>Other</option>
+      </select>
+    </label>
+  </section>
+  <section class="card">
+    <h2>WHAT (machine &amp; view)</h2>
+    <label>Primary machine
+      <select id="machine" required>
+        <option value="">Select…</option>
+        <option>Tower crane</option>
+        <option>Luffer</option>
+        <option>PTZ (Supervisor Cam)</option>
+        <option>Forklift/Telehandler</option>
+        <option>Excavator</option>
+        <option>Other</option>
+      </select>
+    </label>
+    <label>Target view (free text)
+      <input id="targetView" type="text" placeholder="Hook/Load, Fork tips, Reverse/Side, Bucket/Swing, etc.">
+    </label>
+  </section>
+  <section class="card">
+    <h2>IMPACT</h2>
+    <label>How often does this slow production?
+      <select id="impactFreq" required>
+        <option value="">Select…</option>
+        <option>Daily</option>
+        <option>Weekly</option>
+        <option>Monthly</option>
+      </select>
+    </label>
+    <label>Time lost per shift
+      <select id="timeLost" required>
+        <option value="">Select…</option>
+        <option>&lt; 10 minutes</option>
+        <option>10–30 minutes</option>
+        <option>30–60 minutes</option>
+        <option>&gt; 60 minutes</option>
+      </select>
+    </label>
+  </section>
+  <section class="card">
+    <h2>WHEN</h2>
+    <label>Time most likely to need a camera solution?
+      <select id="timeline" required>
+        <option value="">Select…</option>
+        <option>ASAP</option>
+        <option>This week</option>
+        <option>Later, during current project</option>
+        <option>On next project (1–3 months)</option>
+        <option>Never</option>
+      </select>
+    </label>
+  </section>
+  <section class="card">
+    <h2>WHY</h2>
+    <label>Main reason (choose one)
+      <select id="reason" required>
+        <option value="">Select…</option>
+        <option>Safety (avoid near misses)</option>
+        <option>Faster cycles (productivity)</option>
+        <option>Better load alignment</option>
+        <option>Night / low‑light operations</option>
+        <option>Weather challenges (rain / fog)</option>
+        <option>Operator confidence (new operator)</option>
+      </select>
+    </label>
+    <label>Optional note
+      <input id="reasonNote" type="text" placeholder="One‑liner (optional)">
+    </label>
+  </section>
+  <section class="card">
+    <h2>Photos (optional)</h2>
+    <p>Snap up to 3 images (problem area + likely mount point). Images are compressed on device.</p>
+    <input id="photos" type="file" accept="image/*" capture="environment" multiple>
+    <div id="preview" class="preview"></div>
+  </section>
+  <section class="card">
+    <h2>Rep details (optional)</h2>
+    <label>Tech initials
+      <input id="techInitials" type="text" maxlength="4" placeholder="VN">
+    </label>
+  </section>
+  <section class="actions">
+    <button id="saveDraft" type="button">Save Draft</button>
+    <button id="submit" type="button" class="primary">Queue Submission</button>
+  </section>
+  <section class="card">
+    <h2>Sync &amp; Settings</h2>
+    <div class="grid">
+      <label>Endpoint URL (HTTPS)
+        <input id="endpointUrl" type="url" placeholder="https://your-endpoint.example.com/ingest" inputmode="url">
+      </label>
+      <label>Auth Header (optional, e.g., Authorization: Bearer …)
+        <input id="authHeaderKey" type="text" placeholder="Authorization">
+      </label>
+      <label>Auth Value
+        <input id="authHeaderValue" type="text" placeholder="Bearer YOUR_TOKEN">
+      </label>
+    </div>
+    <div class="actions">
+      <button id="saveSettings" type="button">Save Settings</button>
+      <button id="syncNow" type="button" class="primary">Sync Now</button>
+      <button id="exportJson" type="button">Export JSON</button>
+      <button id="exportCsv" type="button">Export CSV</button>
+      <button id="clearAll" type="button" class="danger">Clear Local Data</button>
+    </div>
+    <p class="fineprint">Data is stored locally on this device until you sync. Only capture business contact details. Ensure you have consent to store/send this information.</p>
+  </section>
+  <section class="card install-hint">
+    <h2>Add to Home Screen (iPhone)</h2>
+    <ol>
+      <li>Tap <strong>Share</strong> (Safari) → <strong>Add to Home Screen</strong>.</li>
+      <li>Open from the icon to use full‑screen and offline.</li>
+    </ol>
+  </section>
+</main>
+<footer>
+  <p>Opticrane • <a href="https://www.opticrane.com" target="_blank" rel="noopener">opticrane.com</a></p>
+</footer>
+</body>
+</html>
