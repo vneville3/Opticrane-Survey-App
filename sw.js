@@ -1,22 +1,22 @@
-// sw.js  (bump this name each release)
-const CACHE_NAME = 'opticrane-pwa-v1_3';
+// Opticrane PWA Service Worker v1.2.1
+const CACHE_NAME = 'opticrane-pwa-v1_2_1';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css',
-  './app.js',
-  './manifest.json',
+  './styles.css?v=1.2.1',
+  './app.js?v=1.2.1',
+  './manifest.json?v=1.2.1',
   './opticrane-icon-192.png',
   './opticrane-icon-512.png'
 ];
 
-// Install: cache and take control immediately
+// Install: cache & take control immediately
 self.addEventListener('install', (e) => {
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(ASSETS)));
 });
 
-// Activate: clear old caches and claim clients
+// Activate: purge old caches & claim clients
 self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
@@ -25,15 +25,11 @@ self.addEventListener('activate', (e) => {
   })());
 });
 
-// Fetch: network-first for navigations (index.html), cache-first for other files
+// Fetch: network-first for navigations; cache-first for assets
 self.addEventListener('fetch', (e) => {
   if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match('./index.html'))
-    );
+    e.respondWith(fetch(e.request).catch(() => caches.match('./index.html')));
     return;
   }
-  e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
-  );
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
