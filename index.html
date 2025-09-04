@@ -6,15 +6,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="apple-touch-icon" href="opticrane-icon-192.png" />
-  <link rel="manifest" href="manifest.json" />
-  <title>Opticrane Visual Aid Survey Collection App v1.2.0</title>
-  <link rel="stylesheet" href="styles.css" />
-  <script defer src="app.js"></script>
+  <link rel="manifest" href="manifest.json?v=1.2.1" />
+  <title>Opticrane Visual Aid Survey Collection App v1.2.1</title>
+  <link rel="stylesheet" href="styles.css?v=1.2.1" />
+  <script defer src="app.js?v=1.2.1"></script>
 </head>
 <body>
-<header>
-  <h1>Opticrane Visual Aid Survey Collection App <span class="tag">v1.2.0</span></h1>
-  <p class="subtitle">Fast, offline-ready, iPhone-friendly. Save drafts, add photos, and sync when online.</p>
+<header class="topbar">
+  <img class="brand" src="opticrane-icon-192.png" alt="Opticrane logo" />
+  <div class="titles">
+    <h1>Opticrane Visual Aid Survey <span class="tag">v1.2.1</span></h1>
+    <p class="subtitle">Fast, offline-ready, iPhone-friendly. Save drafts, add photos, and sync when online.</p>
+  </div>
 </header>
 
 <main>
@@ -69,7 +72,7 @@
       </select>
     </label>
     <label>Proposed Camera Kit
-      <input id="targetView" type="text" placeholder="LoadView (AF-Zoom + monitor), FAMOS blind-spot, etc." />
+      <input id="targetView" type="text" placeholder="LoadView (AF-Zoom + 7&quot; monitor), FAMOS blind-spot, etc." />
     </label>
   </section>
 
@@ -129,6 +132,14 @@
   </section>
 
   <section class="card">
+    <h2>Assessment</h2>
+    <div class="assessment">
+      <div><b>Score:</b> <span id="scoreText">–</span></div>
+      <div><b>Suggested Kit:</b> <span id="suggestionText">–</span></div>
+    </div>
+  </section>
+
+  <section class="card">
     <h2>Photos (optional)</h2>
     <p>Snap up to 3 images (problem area + likely mount point). Images are compressed on device.</p>
     <input id="photos" type="file" accept="image/*" capture="environment" multiple />
@@ -145,6 +156,7 @@
   <section class="actions">
     <button id="saveDraft" type="button">Save Draft</button>
     <button id="submit" type="button" class="primary">Queue Submission</button>
+    <button id="backfill" type="button" class="ghost">Rep Backfill</button>
     <button id="helpBtn" type="button" class="ghost">Help / Info</button>
   </section>
 
@@ -152,13 +164,19 @@
     <h2>Sync &amp; Settings</h2>
     <div class="grid">
       <label>Endpoint URL (HTTPS)
-        <input id="endpointUrl" type="url" placeholder="https://your-endpoint.example.com/ingest" inputmode="url" />
+        <input id="endpointUrl" type="url" placeholder="https://flow.microsoft.com/.../invoke" inputmode="url" />
       </label>
-      <label>Auth Header (optional, e.g., Authorization: Bearer …)
+      <label>Secret token (adds ?token=… to URL)
+        <input id="queryToken" type="text" placeholder="OPTI-2025-DB-SECRET" />
+      </label>
+      <label>Auth Header (optional, e.g., Authorization)
         <input id="authHeaderKey" type="text" placeholder="Authorization" />
       </label>
       <label>Auth Value
         <input id="authHeaderValue" type="text" placeholder="Bearer YOUR_TOKEN" />
+      </label>
+      <label>Rep Backfill form URL
+        <input id="backfillUrl" type="url" placeholder="https://forms.microsoft.com/..." />
       </label>
     </div>
     <div class="actions">
@@ -168,27 +186,26 @@
       <button id="exportCsv" type="button">Export CSV</button>
       <button id="clearAll" type="button" class="danger">Clear Local Data</button>
     </div>
-    <p class="fineprint">Data is stored locally on this device until you sync. Only capture business contact details. Ensure you have consent to store/send this information.</p>
+    <p class="fineprint">Data stays on this device until you Sync. Capture business contact info only and ensure consent.</p>
   </section>
 
-  <!-- Help Modal -->
   <div id="helpModal" class="modal" aria-hidden="true">
     <div class="modal-content">
       <button id="closeHelp" class="close" aria-label="Close">×</button>
       <h2>How this app works</h2>
       <ol>
         <li><strong>Add to Home Screen (iPhone):</strong> Open in Safari → Share → Add to Home Screen.</li>
-        <li><strong>Fill on site:</strong> Contact, Site Location, Type of Machine, Current Issues or Concerns, Level of Urgency, Specific Reason.</li>
-        <li><strong>Photos:</strong> Up to 3, compressed on-device.</li>
-        <li><strong>Queue Submission:</strong> Saves locally for offline use.</li>
-        <li><strong>Sync:</strong> Set Endpoint + Authorization header if needed → <em>Sync Now</em>.</li>
+        <li><strong>Fill on site:</strong> Contact, Site Location, Type of Machine, Issues, Urgency, Reason.</li>
+        <li><strong>Assessment:</strong> Score A/B/C appears automatically with a suggested kit (editable).</li>
+        <li><strong>Queue Submission:</strong> Saves locally (works offline).</li>
+        <li><strong>Sync:</strong> Set Endpoint + optional token → <em>Sync Now</em>.</li>
+        <li><strong>Backfill:</strong> Opens your Rep Backfill form link for extra notes/photos.</li>
         <li><strong>Where files live:</strong> Drafts/queue are local; use <em>Export CSV/JSON</em> for backup.</li>
-        <li><strong>Send to database:</strong> Endpoint can be Apps Script, Power Automate HTTP, or any HTTPS webhook.</li>
       </ol>
-      <p class="fineprint">Tip: If the app updates, pull-to-refresh; the offline cache auto-updates when the service worker changes.</p>
     </div>
   </div>
 
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </main>
 
 <footer>
@@ -196,5 +213,3 @@
 </footer>
 </body>
 </html>
-<link rel="stylesheet" href="styles.css?v=1.2.0" />
-<script defer src="app.js?v=1.2.0"></script>
