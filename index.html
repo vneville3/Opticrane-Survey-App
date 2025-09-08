@@ -6,16 +6,16 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="apple-touch-icon" href="opticrane-icon-192.png" />
-  <link rel="manifest" href="manifest.json?v=1.3.1" />
-  <title>Opticrane Visual Aid Survey Collection App v1.3.1</title>
-  <link rel="stylesheet" href="styles.css?v=1.3.1" />
-  <script defer src="app.js?v=1.3.1"></script>
+  <link rel="manifest" href="manifest.json?v=1.3.2" />
+  <title>Opticrane Visual Aid Survey Collection App v1.3.2</title>
+  <link rel="stylesheet" href="styles.css?v=1.3.2" />
+  <script defer src="app.js?v=1.3.2"></script>
 </head>
 <body>
 <header class="topbar">
   <img class="brand" src="opticrane-icon-192.png" alt="Opticrane logo" />
   <div class="titles">
-    <h1>Opticrane Visual Aid Survey <span class="tag">v1.3.1</span></h1>
+    <h1>Opticrane Visual Aid Survey <span class="tag">v1.3.2</span></h1>
     <p class="subtitle">Offline-ready. Save drafts, add photos, then share by email.</p>
   </div>
 </header>
@@ -153,6 +153,7 @@
     <button id="saveDraft" type="button">Save Draft</button>
     <button id="submit" type="button" class="primary">Queue Submission</button>
     <button id="shareLast" type="button" class="ghost">Share Last Entry (Email)</button>
+    <button id="composeMailto" type="button" class="ghost">Compose Email (No Attachments)</button>
     <button id="backfill" type="button" class="ghost">Rep Backfill</button>
     <button id="helpBtn" type="button" class="ghost">Help / Info</button>
   </section>
@@ -160,8 +161,8 @@
   <section class="card">
     <h2>Settings</h2>
     <p class="helptext">
-      <b>Collection email:</b> your address to send entries to (e.g., <code>vneville@opticrane.com</code>).<br/>
-      Save a Contact “Opticrane Survey Inbox” so Mail auto-suggests it in To:.
+      <b>Collection email:</b> the address to send entries to (e.g., <code>you@opticrane.com</code>).<br/>
+      When you tap <b>Share Last Entry</b>, the app will <b>copy this email to your clipboard</b> so you can just tap <b>To</b> → <b>Paste</b> in Mail. The subject is auto-filled.
     </p>
     <div class="grid">
       <label>Collection email (To)
@@ -189,8 +190,9 @@
       <h2>How this app works</h2>
       <ol>
         <li><b>Queue Submission</b> (works offline).</li>
-        <li><b>Share Last Entry</b> → choose <b>Mail</b> → To: your address → Send.</li>
+        <li><b>Share Last Entry</b> → Mail → <em>To</em> (paste; subject auto-filled) → Send.</li>
         <li>Outlook rule moves mail to <b>Survey Inbound</b>; Flow makes the SharePoint item and attaches photos.</li>
+        <li><b>Rep Backfill:</b> opens your extra-notes/photos form (set the link in Settings).</li>
       </ol>
     </div>
   </div>
@@ -203,3 +205,4 @@
 </footer>
 </body>
 </html>
+
