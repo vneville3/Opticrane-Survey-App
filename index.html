@@ -6,17 +6,17 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="apple-touch-icon" href="opticrane-icon-192.png" />
-  <link rel="manifest" href="manifest.json?v=1.2.1" />
-  <title>Opticrane Visual Aid Survey Collection App v1.2.1</title>
-  <link rel="stylesheet" href="styles.css?v=1.2.1" />
-  <script defer src="app.js?v=1.2.1"></script>
+  <link rel="manifest" href="manifest.json?v=1.3.0" />
+  <title>Opticrane Visual Aid Survey Collection App v1.3.0</title>
+  <link rel="stylesheet" href="styles.css?v=1.3.0" />
+  <script defer src="app.js?v=1.3.0"></script>
 </head>
 <body>
 <header class="topbar">
   <img class="brand" src="opticrane-icon-192.png" alt="Opticrane logo" />
   <div class="titles">
-    <h1>Opticrane Visual Aid Survey <span class="tag">v1.2.1</span></h1>
-    <p class="subtitle">Fast, offline-ready, iPhone-friendly. Save drafts, add photos, and sync when online.</p>
+    <h1>Opticrane Visual Aid Survey <span class="tag">v1.3.0</span></h1>
+    <p class="subtitle">Offline-ready. Save drafts, add photos, then share by email.</p>
   </div>
 </header>
 
@@ -132,14 +132,6 @@
   </section>
 
   <section class="card">
-    <h2>Assessment</h2>
-    <div class="assessment">
-      <div><b>Score:</b> <span id="scoreText">–</span></div>
-      <div><b>Suggested Kit:</b> <span id="suggestionText">–</span></div>
-    </div>
-  </section>
-
-  <section class="card">
     <h2>Photos (optional)</h2>
     <p>Snap up to 3 images (problem area + likely mount point). Images are compressed on device.</p>
     <input id="photos" type="file" accept="image/*" capture="environment" multiple />
@@ -156,24 +148,23 @@
   <section class="actions">
     <button id="saveDraft" type="button">Save Draft</button>
     <button id="submit" type="button" class="primary">Queue Submission</button>
+    <button id="shareLast" type="button" class="ghost">Share Last Entry (Email)</button>
     <button id="backfill" type="button" class="ghost">Rep Backfill</button>
     <button id="helpBtn" type="button" class="ghost">Help / Info</button>
   </section>
 
   <section class="card">
-    <h2>Sync &amp; Settings</h2>
+    <h2>Settings</h2>
+    <p class="helptext">
+      <b>Collection email:</b> the address you’ll send each entry to (e.g., <code>survey@opticrane.com</code>).  
+      You’ll pick “Mail” in the share sheet; iPhone will queue the message if you’re offline.
+    </p>
     <div class="grid">
-      <label>Endpoint URL (HTTPS)
-        <input id="endpointUrl" type="url" placeholder="https://flow.microsoft.com/.../invoke" inputmode="url" />
+      <label>Collection email (To)
+        <input id="collectionEmail" type="email" placeholder="survey@opticrane.com" />
       </label>
-      <label>Secret token (adds ?token=… to URL)
-        <input id="queryToken" type="text" placeholder="OPTI-2025-DB-SECRET" />
-      </label>
-      <label>Auth Header (optional, e.g., Authorization)
-        <input id="authHeaderKey" type="text" placeholder="Authorization" />
-      </label>
-      <label>Auth Value
-        <input id="authHeaderValue" type="text" placeholder="Bearer YOUR_TOKEN" />
+      <label>Subject prefix
+        <input id="subjectPrefix" type="text" value="Opticrane Survey" />
       </label>
       <label>Rep Backfill form URL
         <input id="backfillUrl" type="url" placeholder="https://forms.microsoft.com/..." />
@@ -181,26 +172,23 @@
     </div>
     <div class="actions">
       <button id="saveSettings" type="button">Save Settings</button>
-      <button id="syncNow" type="button" class="primary">Sync Now</button>
-      <button id="exportJson" type="button">Export JSON</button>
-      <button id="exportCsv" type="button">Export CSV</button>
+      <button id="exportCsv" type="button">Export Queue (CSV)</button>
+      <button id="exportJson" type="button">Export Queue (JSON)</button>
       <button id="clearAll" type="button" class="danger">Clear Local Data</button>
     </div>
-    <p class="fineprint">Data stays on this device until you Sync. Capture business contact info only and ensure consent.</p>
+    <p id="syncStatus" class="statusline"></p>
   </section>
 
+  <!-- Help -->
   <div id="helpModal" class="modal" aria-hidden="true">
     <div class="modal-content">
       <button id="closeHelp" class="close" aria-label="Close">×</button>
       <h2>How this app works</h2>
       <ol>
-        <li><strong>Add to Home Screen (iPhone):</strong> Open in Safari → Share → Add to Home Screen.</li>
-        <li><strong>Fill on site:</strong> Contact, Site Location, Type of Machine, Issues, Urgency, Reason.</li>
-        <li><strong>Assessment:</strong> Score A/B/C appears automatically with a suggested kit (editable).</li>
-        <li><strong>Queue Submission:</strong> Saves locally (works offline).</li>
-        <li><strong>Sync:</strong> Set Endpoint + optional token → <em>Sync Now</em>.</li>
-        <li><strong>Backfill:</strong> Opens your Rep Backfill form link for extra notes/photos.</li>
-        <li><strong>Where files live:</strong> Drafts/queue are local; use <em>Export CSV/JSON</em> for backup.</li>
+        <li><b>Fill on site</b> → Queue Submission (works offline).</li>
+        <li><b>Share Last Entry</b> → choose <b>Mail</b> → send to your collection email.</li>
+        <li>Flow watches the mailbox and files data into SharePoint/Excel; photos go to a folder.</li>
+        <li>Use <b>Export Queue</b> any time to back up your device.</li>
       </ol>
     </div>
   </div>
