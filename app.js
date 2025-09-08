@@ -1,69 +1,38 @@
-// ===== Opticrane Survey App v1.2.1 =====
-const VERSION = '1.2.1';
-const $ = (s) => document.querySelector(s);
+// Opticrane Survey App — Standard-only v1.3.0
+const VERSION = '1.3.0';
+const $ = (s)=>document.querySelector(s);
 
-// --- Service Worker (instant update) ---
+// Service worker (instant updates)
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js?v=' + VERSION).then(reg => {
-    // Check quickly for new SW
-    reg.update();
-    reg.onupdatefound = () => {
-      const nw = reg.installing;
-      nw && (nw.onstatechange = () => {
-        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-          toast('Update available — reloading…');
-          setTimeout(() => location.reload(), 600);
-        }
-      });
-    };
-  }).catch(console.error);
+  navigator.serviceWorker.register('sw.js?v='+VERSION).then(reg=>{ reg.update(); }).catch(console.error);
 }
 
-// --- State ---
-const LS_KEYS = {
-  queue: 'oc_queue',
-  settings: 'oc_settings',
-  draft: 'oc_draft'
-};
-
+// Local state
+const LS = { queue:'oc_queue', settings:'oc_settings', draft:'oc_draft' };
 const state = {
-  queue: JSON.parse(localStorage.getItem(LS_KEYS.queue) || '[]'),
-  settings: JSON.parse(localStorage.getItem(LS_KEYS.settings) || '{"endpointUrl":"","queryToken":"","authHeaderKey":"","authHeaderValue":"","backfillUrl":""}'),
-  draft: JSON.parse(localStorage.getItem(LS_KEYS.draft) || '{}')
+  queue: JSON.parse(localStorage.getItem(LS.queue)||'[]'),
+  settings: JSON.parse(localStorage.getItem(LS.settings)||'{"collectionEmail":"","subjectPrefix":"Opticrane Survey","backfillUrl":""}'),
+  draft: JSON.parse(localStorage.getItem(LS.draft)||'{}')
 };
 
-// --- UI helpers ---
-function toast(msg) {
-  const t = $('#toast');
-  if (!t) return alert(msg);
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
-}
+// UI helpers
+function toast(m){const t=$('#toast'); if(!t) return alert(m); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200);}
+function setStatus(m){const el=$('#syncStatus'); if(el) el.textContent=m||'';}
 
-function loadSettings() {
-  $('#endpointUrl').value = state.settings.endpointUrl || '';
-  $('#queryToken').value = state.settings.queryToken || '';
-  $('#authHeaderKey').value = state.settings.authHeaderKey || '';
-  $('#authHeaderValue').value = state.settings.authHeaderValue || '';
-  $('#backfillUrl').value = state.settings.backfillUrl || '';
-}
-
-function saveSettings() {
-  const s = {
-    endpointUrl: $('#endpointUrl').value.trim(),
-    queryToken: $('#queryToken').value.trim(),
-    authHeaderKey: $('#authHeaderKey').value.trim(),
-    authHeaderValue: $('#authHeaderValue').value.trim(),
-    backfillUrl: $('#backfillUrl').value.trim()
+// Settings
+function loadSettings(){ $('#collectionEmail').value=state.settings.collectionEmail||''; $('#subjectPrefix').value=state.settings.subjectPrefix||'Opticrane Survey'; $('#backfillUrl').value=state.settings.backfillUrl||''; }
+function saveSettings(){
+  state.settings = {
+    collectionEmail: ($('#collectionEmail').value||'').trim(),
+    subjectPrefix: ($('#subjectPrefix').value||'Opticrane Survey').trim(),
+    backfillUrl: ($('#backfillUrl').value||'').trim()
   };
-  state.settings = s;
-  localStorage.setItem(LS_KEYS.settings, JSON.stringify(s));
+  localStorage.setItem(LS.settings, JSON.stringify(state.settings));
   toast('Settings saved.');
 }
 
-// --- Form capture ---
-function gatherFormData() {
+// Gather form
+function gatherFormData(){
   return {
     timestamp: new Date().toISOString(),
     contactName: $('#contactName').value.trim(),
@@ -71,7 +40,7 @@ function gatherFormData() {
     siteCity: $('#siteCity').value.trim(),
     environment: $('#environment').value,
     machine: $('#machine').value,
-    targetView: $('#targetView').value.trim(),   // Proposed kit (editable)
+    targetView: $('#targetView').value.trim(),
     impactFreq: $('#impactFreq').value,
     timeLost: $('#timeLost').value,
     timeline: $('#timeline').value,
@@ -79,230 +48,73 @@ function gatherFormData() {
     reasonNote: $('#reasonNote').value.trim(),
     techInitials: $('#techInitials').value.trim().toUpperCase(),
     photos: [],
-    appVersion: VERSION,
-    assessment: computeAssessment() // include grade + suggestion in payload
+    appVersion: VERSION
   };
 }
+function validateCore(d){ const req=['contactName','role','siteCity','environment','machine','impactFreq','timeLost','timeline','reason']; const miss=req.filter(k=>!d[k]); if(miss.length){ alert('Missing: '+miss.join(', ')); return false;} return true; }
 
-function validateCore(d) {
-  const req = ['contactName','role','siteCity','environment','machine','impactFreq','timeLost','timeline','reason'];
-  const miss = req.filter(k => !d[k]);
-  if (miss.length) { alert('Missing fields: ' + miss.join(', ')); return false; }
-  return true;
+// Photos (compress)
+async function fileToDataUrl(file,max=1200,quality=0.8){
+  const img=await new Promise((res,rej)=>{const fr=new FileReader(); fr.onload=()=>{const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=fr.result;}; fr.onerror=rej; fr.readAsDataURL(file);});
+  const c=document.createElement('canvas'),ctx=c.getContext('2d'); const r=Math.max(img.width,img.height)/max; const w=r>1?Math.round(img.width/r):img.width; const h=r>1?Math.round(img.height/r):img.height; c.width=w;c.height=h;ctx.drawImage(img,0,0,w,h); return c.toDataURL('image/jpeg',quality);
 }
-
-// --- Photos (compressed) ---
-async function fileToDataUrl(file, maxSize = 1200, quality = 0.8) {
-  const img = await new Promise((res, rej) => {
-    const fr = new FileReader();
-    fr.onload = () => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = fr.result; };
-    fr.onerror = rej; fr.readAsDataURL(file);
-  });
-  const c = document.createElement('canvas');
-  const ctx = c.getContext('2d');
-  const ratio = Math.max(img.width, img.height) / maxSize;
-  const w = ratio > 1 ? Math.round(img.width / ratio) : img.width;
-  const h = ratio > 1 ? Math.round(img.height / ratio) : img.height;
-  c.width = w; c.height = h;
-  ctx.drawImage(img, 0, 0, w, h);
-  return c.toDataURL('image/jpeg', quality);
+async function handlePhotos(d){
+  const f=$('#photos').files; if(!f||!f.length) return; const limit=Math.min(f.length,3);
+  for(let i=0;i<limit;i++){ const file=f[i]; const dataUrl=await fileToDataUrl(file); d.photos.push({filename:file.name||`photo_${i+1}.jpg`,mimeType:'image/jpeg',dataUrl}); }
 }
+function updatePreview(){ const f=$('#photos').files,p=$('#preview'); p.innerHTML=''; if(!f||!f.length)return; const limit=Math.min(f.length,3); for(let i=0;i<limit;i++){const url=URL.createObjectURL(f[i]); const img=document.createElement('img'); img.src=url; p.appendChild(img);} }
 
-async function handlePhotos(d) {
-  const f = $('#photos').files;
-  if (!f || !f.length) return;
-  const limit = Math.min(f.length, 3);
-  for (let i = 0; i < limit; i++) {
-    const file = f[i];
-    const dataUrl = await fileToDataUrl(file);
-    d.photos.push({ filename: file.name || `photo_${i+1}.jpg`, mimeType: 'image/jpeg', dataUrl });
+// Draft & Queue
+function saveDraft(){ const d=gatherFormData(); state.draft=d; localStorage.setItem(LS.draft, JSON.stringify(d)); toast('Draft saved.'); }
+function loadDraft(){ const d=state.draft; if(!d||!Object.keys(d).length)return; ['contactName','role','siteCity','environment','machine','targetView','impactFreq','timeLost','timeline','reason','reasonNote','techInitials'].forEach(id=>{const el=$('#'+id); if(el) el.value=d[id]||'';}); }
+async function queueSubmission(){ const d=gatherFormData(); if(!validateCore(d))return; await handlePhotos(d); state.queue.push({id:Date.now()+'_'+Math.random().toString(36).slice(2),data:d,status:'queued'}); localStorage.setItem(LS.queue, JSON.stringify(state.queue)); localStorage.removeItem(LS.draft); state.draft={}; ['contactName','role','siteCity','environment','machine','targetView','impactFreq','timeLost','timeline','reason','reasonNote','techInitials'].forEach(id=>{const el=$('#'+id); if(el) el.value='';}); $('#photos').value=null; $('#preview').innerHTML=''; toast('Queued. Tap “Share Last Entry (Email)”.'); }
+
+// Sharing helpers
+function dataUrlToFile(dataUrl, filename){ const [head,base]=dataUrl.split(','); const mime=(head.match(/data:(.*);base64/)||[])[1]||'application/octet-stream'; const bin=atob(base); const len=bin.length; const buf=new Uint8Array(len); for(let i=0;i<len;i++) buf[i]=bin.charCodeAt(i); return new File([buf], filename, {type:mime}); }
+function jsonToFile(obj, filename){ const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}); return new File([blob], filename, {type:'application/json'}); }
+
+async function shareLastEntry(){
+  if(!state.queue.length){ alert('No entries queued yet.'); return; }
+  const last = state.queue[state.queue.length-1].data;
+  const files = [];
+  // JSON attachment
+  const safeName = (last.siteCity||'site').replace(/[^\w\-]+/g,'_').slice(0,40);
+  files.push(jsonToFile(last, `opticrane_survey_${safeName}.json`));
+  // Photo attachments (if any)
+  (last.photos||[]).forEach((p,idx)=>{ files.push(dataUrlToFile(p.dataUrl, p.filename || `photo_${idx+1}.jpg`)); });
+
+  const subj = `${state.settings.subjectPrefix || 'Opticrane Survey'} — ${last.contactName || ''}`.trim();
+
+  if (navigator.canShare && navigator.canShare({ files })) {
+    try{
+      await navigator.share({ files, title: subj, text: `Send to: ${state.settings.collectionEmail || 'survey@opticrane.com'}` });
+      toast('Shared. Open Mail and send to your collection email.');
+    }catch(e){ if(e.name!=='AbortError'){ alert('Share failed: '+e.message); } }
+  } else {
+    // Fallback: mailto (no attachments) with JSON inline
+    const body = encodeURIComponent(JSON.stringify(last, null, 2));
+    const to = encodeURIComponent(state.settings.collectionEmail || '');
+    location.href = `mailto:${to}?subject=${encodeURIComponent(subj)}&body=${body}`;
   }
 }
 
-function updatePreview() {
-  const f = $('#photos').files; const p = $('#preview'); p.innerHTML = '';
-  if (!f || !f.length) return;
-  const limit = Math.min(f.length, 3);
-  for (let i = 0; i < limit; i++) {
-    const url = URL.createObjectURL(f[i]);
-    const img = document.createElement('img'); img.src = url; p.appendChild(img);
-  }
-}
-
-// --- Drafts / Queue ---
-function saveDraft() {
-  const d = gatherFormData();
-  state.draft = d; localStorage.setItem(LS_KEYS.draft, JSON.stringify(d));
-  toast('Draft saved on this device.');
-}
-
-function loadDraft() {
-  const d = state.draft; if (!d || !Object.keys(d).length) return;
-  $('#contactName').value = d.contactName || '';
-  $('#role').value = d.role || '';
-  $('#siteCity').value = d.siteCity || '';
-  $('#environment').value = d.environment || '';
-  $('#machine').value = d.machine || '';
-  $('#targetView').value = d.targetView || '';
-  $('#impactFreq').value = d.impactFreq || '';
-  $('#timeLost').value = d.timeLost || '';
-  $('#timeline').value = d.timeline || '';
-  $('#reason').value = d.reason || '';
-  $('#reasonNote').value = d.reasonNote || '';
-  $('#techInitials').value = d.techInitials || '';
-  refreshAssessment();
-}
-
-async function queueSubmission() {
-  const d = gatherFormData();
-  if (!validateCore(d)) return;
-  await handlePhotos(d);
-  state.queue.push({ id: Date.now() + '_' + Math.random().toString(36).slice(2), data: d, status: 'queued' });
-  localStorage.setItem(LS_KEYS.queue, JSON.stringify(state.queue));
-  localStorage.removeItem(LS_KEYS.draft); state.draft = {};
-  // reset UI
-  ['contactName','role','siteCity','environment','machine','targetView','impactFreq','timeLost','timeline','reason','reasonNote','techInitials'].forEach(id => { const el = $('#'+id); if (el) el.value = ''; });
-  $('#photos').value = null; $('#preview').innerHTML = '';
-  refreshAssessment();
-  toast('Queued on this device. Use “Sync Now” when online.');
-}
-
-// --- Sync (endpoint + optional token + optional header) ---
-function buildUrlWithToken(raw, token) {
-  if (!raw) return '';
-  if (!token) return raw;
-  try {
-    const u = new URL(raw);
-    if (!u.searchParams.get('token')) u.searchParams.append('token', token);
-    return u.toString();
-  } catch { return raw + (raw.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token); }
-}
-
-async function syncNow() {
-  const baseUrl = ($('#endpointUrl').value || '').trim();
-  if (!baseUrl.startsWith('https://')) { alert('Enter a valid HTTPS Endpoint URL.'); return; }
-  const url = buildUrlWithToken(baseUrl, ($('#queryToken').value || '').trim());
-  const key = ($('#authHeaderKey').value || '').trim();
-  const val = ($('#authHeaderValue').value || '').trim();
-  const headers = { 'Content-Type': 'application/json' };
-  if (key && val) headers[key] = val;
-
-  let changed = false;
-  for (const item of state.queue) {
-    if (item.status === 'queued' || item.status === 'failed') {
-      try {
-        const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(item.data) });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        item.status = 'synced'; changed = true;
-      } catch (e) { console.error('Sync error', e); item.status = 'failed'; changed = true; }
-    }
-  }
-  if (changed) localStorage.setItem(LS_KEYS.queue, JSON.stringify(state.queue));
-  const totals = state.queue.reduce((a, it) => (a[it.status] = (a[it.status] || 0) + 1, a), {});
-  toast(`Sync complete — Queued: ${totals.queued||0} • Synced: ${totals.synced||0} • Failed: ${totals.failed||0}`);
-}
-
-// --- Export / Clear ---
-function exportJson() {
-  const blob = new Blob([JSON.stringify(state.queue, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob); const a = document.createElement('a');
-  a.href = url; a.download = 'opticrane_submissions.json'; a.click(); URL.revokeObjectURL(url);
-}
+// Exports & Clear
+function exportJson(){ const blob=new Blob([JSON.stringify(state.queue,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='opticrane_queue.json'; a.click(); URL.revokeObjectURL(url); }
 function toCsvRow(arr){return arr.map(v=>`"${(v??'').toString().replace(/"/g,'""')}"`).join(',')}
-function exportCsv(){
-  const rows = [['timestamp','contactName','role','siteCity','environment','machine','targetView','impactFreq','timeLost','timeline','reason','reasonNote','techInitials','photoCount','grade','score','suggestion']];
-  for (const item of state.queue) {
-    const d = item.data||{};
-    const a = d.assessment || {};
-    rows.push([d.timestamp,d.contactName,d.role,d.siteCity,d.environment,d.machine,d.targetView,d.impactFreq,d.timeLost,d.timeline,d.reason,d.reasonNote,d.techInitials,(d.photos||[]).length,a.grade??'',a.score??'',a.suggestion??'']);
-  }
-  const csv = rows.map(toCsvRow).join('\n');
-  const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download='opticrane_submissions.csv'; a.click(); URL.revokeObjectURL(url);
-}
-function clearAll(){
-  if(!confirm('Erase drafts and the local queue on this device?')) return;
-  state.queue=[]; state.draft={}; localStorage.removeItem(LS_KEYS.queue); localStorage.removeItem(LS_KEYS.draft);
-  toast('Local data cleared.');
-}
+function exportCsv(){ const rows=[['timestamp','contactName','role','siteCity','environment','machine','targetView','impactFreq','timeLost','timeline','reason','reasonNote','techInitials','photoCount']]; for(const it of state.queue){const d=it.data||{}; rows.push([d.timestamp,d.contactName,d.role,d.siteCity,d.environment,d.machine,d.targetView,d.impactFreq,d.timeLost,d.timeline,d.reason,d.reasonNote,d.techInitials,(d.photos||[]).length]);} const csv=rows.map(toCsvRow).join('\n'); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='opticrane_queue.csv'; a.click(); URL.revokeObjectURL(url);}
+function clearAll(){ if(!confirm('Erase drafts and the local queue on this device?')) return; state.queue=[]; state.draft={}; localStorage.removeItem(LS.queue); localStorage.removeItem(LS.draft); setStatus(''); toast('Local data cleared.'); }
 
-// --- Help / Backfill ---
+// Help / Backfill
 function openHelp(){ $('#helpModal').classList.add('show'); $('#helpModal').setAttribute('aria-hidden','false'); }
 function closeHelp(){ $('#helpModal').classList.remove('show'); $('#helpModal').setAttribute('aria-hidden','true'); }
-function openBackfill(){
-  const url = ($('#backfillUrl').value||'').trim();
-  if (!url) { alert('Add a Backfill form URL in Settings.'); return; }
-  window.open(url, '_blank');
-}
+function openBackfill(){ const url=($('#backfillUrl').value||'').trim(); if(!url){ alert('Add a Backfill form URL in Settings.'); return; } window.open(url,'_blank'); }
 
-// --- Assessment (A/B/C + suggestion) ---
-function computeAssessment() {
-  const freq = $('#impactFreq').value;
-  const lost = $('#timeLost').value;
-  const when = $('#timeline').value;
-  const machine = $('#machine').value;
-  const reason = $('#reason').value;
-  const env = $('#environment').value;
-
-  let score = 0;
-  // Frequency
-  if (freq === 'Daily') score += 3;
-  else if (freq === 'Weekly') score += 2;
-  else if (freq === 'Monthly') score += 1;
-
-  // Time lost
-  if (lost === '> 60 minutes') score += 3;
-  else if (lost === '30–60 minutes') score += 2;
-  else if (lost === '10–30 minutes') score += 1;
-
-  // Urgency
-  if (when === 'ASAP') score += 3;
-  else if (when === 'This week') score += 2;
-  else if (when === 'Later, during current project') score += 1;
-
-  const grade = score >= 7 ? 'A' : score >= 4 ? 'B' : 'C';
-
-  // Suggest kit (simple mapping, editable in UI)
-  let suggestion = '';
-  if (machine === 'Tower crane' || machine === 'Luffer') {
-    if (reason === 'Blind Lifts' || reason === 'Better load alignment' || reason === 'Faster cycles (productivity)') {
-      suggestion = 'LoadView (AF-Zoom + 7" monitor), quick-mount';
-    } else {
-      suggestion = 'LoadView (AF-Zoom) as primary';
-    }
-    if (reason === 'Night / low-light operations') suggestion += ' + low-light camera / IR assist';
-  } else if (machine === 'Forklift/Telehandler') {
-    suggestion = 'FAMOS rear + side (split-screen) blind-spot kit';
-  } else if (machine === 'Excavator') {
-    suggestion = 'FAMOS bucket cam + swing-side blind-spot';
-  } else if (machine === 'PTZ (Supervisor Cam)') {
-    suggestion = 'PTZ supervisor camera for site overview';
-  } else {
-    suggestion = 'Baseline blind-spot + operator view';
-  }
-  if (env === 'Warehouse & MHE') suggestion += ' (rugged MHE mounting)';
-
-  // Autofill proposed kit if empty
-  const target = $('#targetView');
-  if (target && !target.value) target.value = suggestion;
-
-  return { grade, score, suggestion };
-}
-
-function refreshAssessment() {
-  const a = computeAssessment();
-  const s = $('#scoreText'), sug = $('#suggestionText');
-  if (s) s.textContent = `${a.grade} (${a.score})`;
-  if (sug) sug.textContent = a.suggestion;
-}
-
-// --- Init ---
+// Init
 function init(){
-  // Buttons
   $('#saveSettings').addEventListener('click', saveSettings);
   $('#saveDraft').addEventListener('click', saveDraft);
   $('#submit').addEventListener('click', queueSubmission);
-  $('#syncNow').addEventListener('click', syncNow);
+  $('#shareLast').addEventListener('click', shareLastEntry);
   $('#exportJson').addEventListener('click', exportJson);
   $('#exportCsv').addEventListener('click', exportCsv);
   $('#clearAll').addEventListener('click', clearAll);
@@ -311,11 +123,6 @@ function init(){
   $('#closeHelp').addEventListener('click', closeHelp);
   $('#backfill').addEventListener('click', openBackfill);
 
-  // Recompute assessment on key inputs
-  ['impactFreq','timeLost','timeline','machine','reason','environment'].forEach(id=>{
-    const el = $('#'+id); if(el) el.addEventListener('change', refreshAssessment);
-  });
-
-  loadSettings(); loadDraft(); refreshAssessment();
+  loadSettings(); loadDraft();
 }
 document.addEventListener('DOMContentLoaded', init);
