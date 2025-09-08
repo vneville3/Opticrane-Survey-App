@@ -6,16 +6,16 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="apple-touch-icon" href="opticrane-icon-192.png" />
-  <link rel="manifest" href="manifest.json?v=1.3.0" />
-  <title>Opticrane Visual Aid Survey Collection App v1.3.0</title>
-  <link rel="stylesheet" href="styles.css?v=1.3.0" />
-  <script defer src="app.js?v=1.3.0"></script>
+  <link rel="manifest" href="manifest.json?v=1.3.1" />
+  <title>Opticrane Visual Aid Survey Collection App v1.3.1</title>
+  <link rel="stylesheet" href="styles.css?v=1.3.1" />
+  <script defer src="app.js?v=1.3.1"></script>
 </head>
 <body>
 <header class="topbar">
   <img class="brand" src="opticrane-icon-192.png" alt="Opticrane logo" />
   <div class="titles">
-    <h1>Opticrane Visual Aid Survey <span class="tag">v1.3.0</span></h1>
+    <h1>Opticrane Visual Aid Survey <span class="tag">v1.3.1</span></h1>
     <p class="subtitle">Offline-ready. Save drafts, add photos, then share by email.</p>
   </div>
 </header>
@@ -133,8 +133,12 @@
 
   <section class="card">
     <h2>Photos (optional)</h2>
-    <p>Snap up to 3 images (problem area + likely mount point). Images are compressed on device.</p>
-    <input id="photos" type="file" accept="image/*" capture="environment" multiple />
+    <p>Up to <b>3</b> images. Tap <b>Add photo</b> again to add more. Tap a thumbnail to remove.</p>
+    <input id="photos" type="file" accept="image/*" capture="environment" multiple style="display:none" />
+    <div class="actions">
+      <button id="addPhoto" type="button">Add photo</button>
+      <span id="photoCount" class="muted"></span>
+    </div>
     <div id="preview" class="preview"></div>
   </section>
 
@@ -156,12 +160,12 @@
   <section class="card">
     <h2>Settings</h2>
     <p class="helptext">
-      <b>Collection email:</b> the address you’ll send each entry to (e.g., <code>survey@opticrane.com</code>).  
-      You’ll pick “Mail” in the share sheet; iPhone will queue the message if you’re offline.
+      <b>Collection email:</b> your address to send entries to (e.g., <code>vneville@opticrane.com</code>).<br/>
+      Save a Contact “Opticrane Survey Inbox” so Mail auto-suggests it in To:.
     </p>
     <div class="grid">
       <label>Collection email (To)
-        <input id="collectionEmail" type="email" placeholder="survey@opticrane.com" />
+        <input id="collectionEmail" type="email" placeholder="you@opticrane.com" />
       </label>
       <label>Subject prefix
         <input id="subjectPrefix" type="text" value="Opticrane Survey" />
@@ -179,16 +183,14 @@
     <p id="syncStatus" class="statusline"></p>
   </section>
 
-  <!-- Help -->
   <div id="helpModal" class="modal" aria-hidden="true">
     <div class="modal-content">
       <button id="closeHelp" class="close" aria-label="Close">×</button>
       <h2>How this app works</h2>
       <ol>
-        <li><b>Fill on site</b> → Queue Submission (works offline).</li>
-        <li><b>Share Last Entry</b> → choose <b>Mail</b> → send to your collection email.</li>
-        <li>Flow watches the mailbox and files data into SharePoint/Excel; photos go to a folder.</li>
-        <li>Use <b>Export Queue</b> any time to back up your device.</li>
+        <li><b>Queue Submission</b> (works offline).</li>
+        <li><b>Share Last Entry</b> → choose <b>Mail</b> → To: your address → Send.</li>
+        <li>Outlook rule moves mail to <b>Survey Inbound</b>; Flow makes the SharePoint item and attaches photos.</li>
       </ol>
     </div>
   </div>
