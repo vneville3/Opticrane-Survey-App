@@ -1,11 +1,11 @@
-// Opticrane PWA Service Worker v1.3.0
-const CACHE_NAME = 'opticrane-pwa-v1_3_0';
+// Opticrane PWA Service Worker v1.3.1
+const CACHE_NAME = 'opticrane-pwa-v1_3_1';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=1.3.0',
-  './app.js?v=1.3.0',
-  './manifest.json?v=1.3.0',
+  './styles.css?v=1.3.1',
+  './app.js?v=1.3.1',
+  './manifest.json?v=1.3.1',
   './opticrane-icon-192.png',
   './opticrane-icon-512.png'
 ];
